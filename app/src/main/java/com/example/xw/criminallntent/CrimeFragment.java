@@ -2,6 +2,7 @@ package com.example.xw.criminallntent;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -48,6 +49,28 @@ public class CrimeFragment extends Fragment {
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
     private File mPhotoFile;
+    private Callbacks mCallbacks;
+
+    private void updateCrime(){
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
+        mCallbacks.onCrimeUpdate(mCrime);
+    }
+
+    public interface Callbacks{
+        void onCrimeUpdate(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mCallbacks= (Callbacks) activity;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks=null;
+    }
 
     public static CrimeFragment newInstance(UUID crimeId){
         Bundle args=new Bundle();
@@ -80,6 +103,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 mCrime.setTitle(charSequence.toString());
+                updateCrime();
             }
 
             @Override
@@ -105,7 +129,9 @@ public class CrimeFragment extends Fragment {
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+
                 mCrime.setSolved(isChecked);
+                updateCrime();
             }
         });
         mReportButton= (Button) v.findViewById(R.id.crime_report);
@@ -161,6 +187,7 @@ public class CrimeFragment extends Fragment {
         if(requestCode==REQUEST_DATE){
             Date date =(Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setDate(date);
+            updateCrime();
             mDataButton.setText(mCrime.getDate().toString());
         }
         else if (requestCode==REQUEST_CONTACT&&data!=null){
@@ -173,6 +200,7 @@ public class CrimeFragment extends Fragment {
                 c.moveToFirst();
                 String suspect=c.getString(0);
                 mCrime.setSuspect(suspect);
+                updateCrime();
                 mSuspectButton.setText(suspect);
             }
             finally {
@@ -180,6 +208,7 @@ public class CrimeFragment extends Fragment {
             }
         }
         else if (requestCode==REQUEST_PHOTO){
+            updateCrime();
             updatePhotoView();
         }
 
